@@ -31,6 +31,7 @@
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('index') }}">Home</a></li>
                     <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('services') }}">Services</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('detector') }}">Analyze</a></li>
                     
                     {% if session.get('user_id') %}
                         <li class="nav-item ms-lg-3">
@@ -78,7 +79,9 @@
             <div class="container py-3">
                 <h2 class="fw-bold mb-3">Ready to Analyze Your First Mission?</h2>
                 <p class="lead mb-4 opacity-75">Start extracting pixel-level intelligence from your drone data today.</p>
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 rounded-pill shadow fw-bold text-primary">Get Started For Free</a>
+                <a href="{{ url_for('detector') if session.get('user_id') else url_for('register') }}" class="btn btn-light btn-lg px-5 rounded-pill shadow fw-bold text-primary">
+                    {% if session.get('user_id') %}Launch Mission{% else %}Get Started For Free{% endif %}
+                </a>
             </div>
         </section>
         {% endif %} 
@@ -96,6 +99,7 @@
                     <ul class="list-unstyled small text-white-50">
                         <li class="mb-2"><a href="{{ url_for('index') }}" class="text-decoration-none text-white-50 hover-white">Home</a></li>
                         <li class="mb-2"><a href="{{ url_for('services') }}" class="text-decoration-none text-white-50 hover-white">Services</a></li>
+                        <li class="mb-2"><a href="{{ url_for('detector') }}" class="text-decoration-none text-white-50 hover-white">Analyze Mission</a></li>
                         <li class="mb-2"><a href="#" class="text-decoration-none text-white-50 hover-white">Case Studies</a></li>
                     </ul>
                 </div>
