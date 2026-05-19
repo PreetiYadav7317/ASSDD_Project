@@ -239,15 +239,6 @@ def detector():
 def history():
     return render_template('history.html')
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('Dashboard.html')
-
-@app.route('/support')
-@login_required
-def support():
-    return render_template('support.html')
 
 @app.route('/predict', methods=['GET','POST'])
 @login_required
