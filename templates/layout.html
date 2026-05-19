@@ -34,6 +34,8 @@
                     <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('detector') }}">Analyze</a></li>
                     
                     {% if session.get('user_id') %}
+                        <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('history') }}">History</a></li>
+                        
                         <li class="nav-item ms-lg-3">
                             <span class="text-white-50 small pe-2">
                                 <i class="bi bi-person-circle me-1"></i>{{ session['user_name'] }}
@@ -47,9 +49,7 @@
                     {% else %}
                         <li class="nav-item"><a class="nav-link px-3" href="{{ url_for('login') }}">Login</a></li>
                         <li class="nav-item">
-                            <a class="nav-link px-3" href="{{ url_for('register') }}">
-                                Register
-                            </a>
+                            <a class="nav-link px-3" href="{{ url_for('register') }}">Register</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -74,7 +74,7 @@
     <main class="flex-grow-1">
         {% block content %}{% endblock %}
 
-        {% if request.endpoint not in ['login', 'register'] %}
+        {% if request.endpoint not in ['login', 'register', 'history'] %}
         <section class="py-5 bg-primary text-white text-center mt-5">
             <div class="container py-3">
                 <h2 class="fw-bold mb-3">Ready to Analyze Your First Mission?</h2>

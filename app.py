@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy 
 from werkzeug.security import generate_password_hash, check_password_hash 
 from functools import wraps
+from datetime import datetime
 import os
 import time
 import numpy as np
@@ -38,7 +39,19 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(200)) # Increased to 200 to safely store hashed passwords
+    password = db.Column(db.String(200)) 
+    # Relationship to cleanly pull all history instances belonging to this user
+    histories = db.relationship('History', backref='user', lazy=True)
+
+# History model
+class History(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    original_image = db.Column(db.String(255), nullable=False)
+    mask_image = db.Column(db.String(255), nullable=False)
+    overlay_image = db.Column(db.String(255), nullable=False)
+    inference_time = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Database initialization with app context
 with app.app_context(): 
@@ -237,17 +250,9 @@ def detector():
 @app.route('/history')
 @login_required
 def history():
-    return render_template('history.html')
+    user_history = History.query.filter_by(user_id=session['user_id']).order_by(History.timestamp.desc()).all()
+    return render_template('history.html', histories=user_history)
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('Dashboard.html')
-
-@app.route('/support')
-@login_required
-def support():
-    return render_template('support.html')
 
 @app.route('/predict', methods=['GET','POST'])
 @login_required
@@ -289,8 +294,27 @@ def predict():
     orig_img = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
     overlay = cv2.addWeighted(orig_img, 0.6, cv2.cvtColor(mask_img, cv2.COLOR_RGB2BGR), 0.4, 0)
     
-    cv2.imwrite(os.path.join(app.config['RESULT_FOLDER'], 'mask_' + filename), cv2.cvtColor(mask_img, cv2.COLOR_RGB2BGR))
-    cv2.imwrite(os.path.join(app.config['RESULT_FOLDER'], 'overlay_' + filename), overlay)
+    mask_filename = 'mask_' + filename
+    overlay_filename = 'overlay_' + filename
+
+    cv2.imwrite(os.path.join(app.config['RESULT_FOLDER'], mask_filename), cv2.cvtColor(mask_img, cv2.COLOR_RGB2BGR))
+    cv2.imwrite(os.path.join(app.config['RESULT_FOLDER'], overlay_filename), overlay)
+    
+    # --- SAVE TO HISTORY DATABASE ---
+    try:
+        new_history = History(
+            user_id=session['user_id'],
+            original_image=filename,
+            mask_image=mask_filename,
+            overlay_image=overlay_filename,
+            inference_time=inf_time
+        )
+        db.session.add(new_history)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving history: {e}") # helpful for backend debugging
+    # --------------------------------
     
     return render_template('predict.html', filename=filename, time=inf_time, stats=stats)
 
